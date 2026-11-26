@@ -1887,15 +1887,15 @@
           <dd id="detail-motif">Interlaced paths</dd>
         </div>
       </dl>
-      <div class="page-navigation" role="group" aria-label="Browse sample pages">
-        <button class="page-button" id="previous-page" type="button" aria-label="Previous sample page" disabled>
+      <div class="page-navigation" role="group" aria-label="Browse real pages">
+        <button class="page-button" id="previous-page" type="button" aria-label="Previous real page" disabled>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m10.5 3.5-4.5 4.5 4.5 4.5"></path></svg>
         </button>
         <p class="page-status" aria-live="off">
           <strong id="page-label">Closed</strong>
           <span id="page-counter">Click book to open</span>
         </p>
-        <button class="page-button" id="next-page" type="button" aria-label="Next sample page" disabled>
+        <button class="page-button" id="next-page" type="button" aria-label="Next real page" disabled>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m5.5 3.5 4.5 4.5-4.5 4.5"></path></svg>
         </button>
       </div>
@@ -2317,6 +2317,7 @@
     let readingOpen = false;
     let detailBookHovered = false;
     let currentSpread = 0;
+    let detailPage = 1; // real PDF page shown by the detail-panel arrows
     let pointerDirty = false;
     let suspended = false;
     let viewWidth = window.innerWidth;
@@ -4654,16 +4655,18 @@
 
     function updatePageControls(announce = false) {
       const book = activeBook?.data || BOOKS[selectedIndex];
-      const labels = getSpreadLabels(book);
+      const total = book.pages || 0;
       const interactionLocked = mode !== "detail" || !readingOpen;
-      const previousDisabled = interactionLocked || currentSpread === 0;
-      const nextDisabled = interactionLocked || currentSpread === SPREAD_COUNT - 1;
+      const previousDisabled = interactionLocked || detailPage <= 1;
+      const nextDisabled = interactionLocked || !total || detailPage >= total;
 
       previousPageButton.disabled = previousDisabled;
       nextPageButton.disabled = nextDisabled;
-      pageLabel.textContent = readingOpen ? labels[currentSpread] : "Closed";
+      pageLabel.textContent = readingOpen ? `পাতা ${toBn(detailPage)}` : "Closed";
       pageCounter.textContent = readingOpen
-        ? `${pad(currentSpread + 1)} / ${pad(SPREAD_COUNT)}`
+        ? total
+          ? `পাতা ${toBn(detailPage)} / মোট ${toBn(total)}`
+          : "পাতা লোড হচ্ছে…"
         : "Click book to open";
       toggleBookButton.textContent = readingOpen ? "Close book" : "Open book";
       toggleBookButton.setAttribute("aria-pressed", String(readingOpen));
@@ -4673,18 +4676,20 @@
       previousPageButton.setAttribute(
         "aria-label",
         previousDisabled
-          ? "Previous sample page"
-          : `Previous sample page: ${labels[currentSpread - 1]}`
+          ? "Previous real page"
+          : `Previous real page: page ${detailPage - 1}`
       );
       nextPageButton.setAttribute(
         "aria-label",
         nextDisabled
-          ? "Next sample page"
-          : `Next sample page: ${labels[currentSpread + 1]}`
+          ? "Next real page"
+          : `Next real page: page ${detailPage + 1}`
       );
 
       if (announce && activeBook && readingOpen) {
-        liveRegion.textContent = `Page ${currentSpread + 1} of ${SPREAD_COUNT}: ${labels[currentSpread]}.`;
+        liveRegion.textContent = total
+          ? `Real page ${detailPage} of ${total}.`
+          : `Real page ${detailPage}.`;
       }
     }
 
@@ -4693,6 +4698,7 @@
       cancelPageDrag();
       readingOpen = open;
       if (!readingOpen) currentSpread = 0;
+      if (open) detailPage = 1;
       canvas.classList.remove("has-page-hover", "has-closed-book-hover");
       updatePageControls(false);
       pointerDirty = true;
@@ -4716,6 +4722,28 @@
       currentSpread = nextSpread;
       updatePageControls(true);
       requestFrame();
+    }
+
+    /* ---- Detail-panel arrows turn the book's REAL PDF pages (via the reader) ---- */
+    function turnRealPage(direction) {
+      if (mode !== "detail" || !readingOpen || !activeBook) return;
+      const book = activeBook.data;
+      const total = book.pages || 0;
+      const target = total
+        ? clamp(detailPage + direction, 1, total)
+        : Math.max(detailPage + direction, 1);
+      if (total && target === detailPage) return;
+      detailPage = target;
+      updatePageControls(true);
+      openReaderAt(book, target);
+    }
+
+    function openReaderAt(book, page) {
+      if (readerOpen && readerBook === book) {
+        renderReaderPage(page);
+        return;
+      }
+      openReader(book, page);
     }
 
     function updateFlexiblePage(
@@ -5466,6 +5494,7 @@
       readingOpen = false;
       detailBookHovered = false;
       currentSpread = 0;
+      detailPage = 1;
       resetDetailPress();
       focusReturnTarget = origin === canvas
         ? markers.children[selectedIndex] || inspectButton
@@ -5581,6 +5610,7 @@
       readingOpen = false;
       detailBookHovered = false;
       currentSpread = 0;
+      detailPage = 1;
       canvas.classList.remove("has-page-hover", "has-closed-book-hover");
       updatePageControls(false);
       controls.enabled = false;
@@ -6161,8 +6191,8 @@
       inspectButton.addEventListener("click", () => openDetail(inspectButton));
       closeButton.addEventListener("click", closeDetail);
       toggleBookButton.addEventListener("click", () => setReadingOpen(!readingOpen));
-      previousPageButton.addEventListener("click", () => turnPage(-1));
-      nextPageButton.addEventListener("click", () => turnPage(1));
+      previousPageButton.addEventListener("click", () => turnRealPage(-1));
+      nextPageButton.addEventListener("click", () => turnRealPage(1));
       resetButton.addEventListener("click", resetInspectionView);
 
       renderer.render(scene, camera);
@@ -6247,6 +6277,8 @@
         readerPage = num;
         readerCanvas.hidden = false;
         readerStatus.hidden = true;
+        detailPage = num;
+        if (readingOpen && activeBook) updatePageControls(false);
         updateReaderControls();
       } catch (error) {
         readerStatus.textContent = "এই পাতাটি খোলা যায়নি। আবার চেষ্টা করুন।";
@@ -6268,10 +6300,10 @@
       renderReaderPage(target);
     }
 
-    async function openReader(book) {
+    async function openReader(book, startPage = 1) {
       if (!book || !book.pdf) return;
       readerBook = book;
-      readerPage = 1;
+      readerPage = startPage;
       readerQueued = 0;
       readerDoc = readerDocs.get(book.id) || null;
       readerEyebrow.textContent = `Volume ${book.roman} · ${book.discipline}`;
@@ -6293,7 +6325,7 @@
           readerDocs.set(book.id, readerDoc);
         }
         if (readerOpen && readerBook === book) {
-          await renderReaderPage(1);
+          await renderReaderPage(startPage);
         }
       } catch (error) {
         if (readerOpen && readerBook === book) {
