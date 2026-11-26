@@ -1594,6 +1594,207 @@
       }
     }
 
+    /* ---- Real-book reader (DOM overlay, PDF.js) ---- */
+    .reader {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      padding: 18px 16px 14px;
+      overflow: hidden;
+      background: color-mix(in srgb, var(--paper-deep) 96%, transparent);
+      color: var(--ink);
+    }
+
+    .reader[hidden] {
+      display: none;
+    }
+
+    .reader__bar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .reader__eyebrow {
+      margin: 0;
+      color: var(--ink-soft);
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .reader__title {
+      margin: 6px 0 0;
+      font-family: var(--serif);
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+    }
+
+    .reader__close {
+      flex: 0 0 auto;
+      min-height: 42px;
+      padding: 0 18px;
+      border: 1px solid color-mix(in srgb, var(--ink) 45%, transparent);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .reader__close:hover {
+      background: var(--paper-pale);
+      color: var(--paper);
+    }
+
+    .reader__stage {
+      position: relative;
+      display: flex;
+      flex: 1 1 auto;
+      min-height: 0;
+      margin-top: 14px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    .reader__status {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 2;
+      max-width: min(90%, 420px);
+      margin: 0;
+      padding: 12px 20px;
+      border: 1px solid var(--rule);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--paper-deep) 94%, transparent);
+      color: var(--ink);
+      font-size: 0.9rem;
+      text-align: center;
+      transform: translate(-50%, -50%);
+    }
+
+    .reader__status[hidden] {
+      display: none;
+    }
+
+    .reader__canvas {
+      max-width: 100%;
+      height: auto;
+      margin: auto;
+      border-radius: 3px;
+      background: #fff;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    }
+
+    .reader__controls {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 960px;
+      margin: 14px auto 0;
+    }
+
+    .reader__nav {
+      min-height: 44px;
+      padding: 0 16px;
+      border: 1px solid color-mix(in srgb, var(--ink) 45%, transparent);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+    }
+
+    .reader__nav:first-child {
+      justify-self: start;
+    }
+
+    .reader__nav:last-child {
+      justify-self: end;
+    }
+
+    .reader__nav:hover:not(:disabled) {
+      background: var(--paper-pale);
+      color: var(--paper);
+    }
+
+    .reader__nav:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    .reader__counter {
+      margin: 0;
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    .read-button {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff7ee;
+    }
+
+    .read-button:hover {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 82%, #fff);
+      color: #fff7ee;
+    }
+
+    .fallback-read {
+      position: relative;
+      z-index: 1;
+      justify-self: start;
+      min-height: 38px;
+      margin-top: 14px;
+      padding: 0 18px;
+      border: 1px solid rgba(247, 235, 205, 0.6);
+      border-radius: 999px;
+      background: transparent;
+      color: #f2e5c8;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .fallback-read:hover {
+      background: #f2e5c8;
+      color: var(--book-color);
+    }
+
+    @media (max-width: 640px) {
+      .reader {
+        padding: 14px 10px 10px;
+      }
+
+      .reader__nav {
+        padding: 0 12px;
+        font-size: 0.65rem;
+      }
+    }
+
   </style>
   <script type="importmap">
     {
@@ -1701,11 +1902,31 @@
       <div class="detail-controls">
         <p class="microcopy">Drag cover or click once to open · Background to orbit</p>
         <div class="detail-buttons">
+          <button class="text-button read-button" id="read-book" type="button">বইটি পড়ুন</button>
           <button class="text-button reset-button" id="toggle-book" type="button" aria-pressed="false">Open book</button>
           <button class="text-button reset-button" id="reset-view" type="button">Reset view</button>
         </div>
       </div>
     </aside>
+
+    <section class="reader" id="reader" role="dialog" aria-modal="true" aria-labelledby="reader-title" aria-hidden="true" hidden>
+      <div class="reader__bar">
+        <div class="reader__meta">
+          <p class="reader__eyebrow" id="reader-eyebrow">Volume I</p>
+          <h2 class="reader__title" id="reader-title">Smart Marketing</h2>
+        </div>
+        <button class="reader__close" id="reader-close" type="button" aria-label="বন্ধ করুন — শেলফে ফিরুন">✕ বন্ধ</button>
+      </div>
+      <div class="reader__stage" id="reader-stage">
+        <p class="reader__status" id="reader-status" role="status">বইটি খুলছি…</p>
+        <canvas class="reader__canvas" id="reader-canvas" aria-label="বইয়ের পাতা" hidden></canvas>
+      </div>
+      <div class="reader__controls">
+        <button class="reader__nav" id="reader-prev" type="button">← আগের পাতা</button>
+        <p class="reader__counter" id="reader-counter" aria-live="polite">পাতা ১ / মোট ৯০</p>
+        <button class="reader__nav" id="reader-next" type="button">পরের পাতা →</button>
+      </div>
+    </section>
 
     <div class="sr-only" id="live-region" aria-live="polite"></div>
 
@@ -1720,13 +1941,13 @@
         </p>
       </div>
       <div class="fallback__grid" aria-label="Seven marketing books">
-        <article class="fallback-book" style="--book-color:#1d5c4d;--book-foil:#e8c97a;--book-height:390px"><span>Volume I</span><strong>Smart Marketing</strong></article>
-        <article class="fallback-book" style="--book-color:#211d1a;--book-foil:#c9a227;--book-height:356px"><span>Volume II</span><strong>THE 48 LAWS OF POWER</strong></article>
-        <article class="fallback-book" style="--book-color:#c23b2e;--book-foil:#ffd9a0;--book-height:374px"><span>Volume III</span><strong>WOW Content</strong></article>
-        <article class="fallback-book" style="--book-color:#5e2a4a;--book-foil:#e8c9a0;--book-height:404px"><span>Volume IV</span><strong>Conscious Branding &amp; Marketing</strong></article>
-        <article class="fallback-book" style="--book-color:#274d33;--book-foil:#e5d9b0;--book-height:365px"><span>Volume V</span><strong>Marketing Framework</strong></article>
-        <article class="fallback-book" style="--book-color:#16337a;--book-foil:#f5c518;--book-height:380px"><span>Volume VI</span><strong>How to Prepare for the AGI Era</strong></article>
-        <article class="fallback-book" style="--book-color:#8fb4c9;--book-foil:#1e5aa8;--book-height:372px"><span>Volume VII</span><strong>Prompt Engineering Mastery</strong></article>
+        <article class="fallback-book" style="--book-color:#1d5c4d;--book-foil:#e8c97a;--book-height:390px"><span>Volume I</span><strong>Smart Marketing</strong><button class="fallback-read" type="button" data-book="smart-marketing">পড়ুন</button></article>
+        <article class="fallback-book" style="--book-color:#211d1a;--book-foil:#c9a227;--book-height:356px"><span>Volume II</span><strong>THE 48 LAWS OF POWER</strong><button class="fallback-read" type="button" data-book="the-48-laws-of-power">পড়ুন</button></article>
+        <article class="fallback-book" style="--book-color:#c23b2e;--book-foil:#ffd9a0;--book-height:374px"><span>Volume III</span><strong>WOW Content</strong><button class="fallback-read" type="button" data-book="wow-content">পড়ুন</button></article>
+        <article class="fallback-book" style="--book-color:#5e2a4a;--book-foil:#e8c9a0;--book-height:404px"><span>Volume IV</span><strong>Conscious Branding &amp; Marketing</strong><button class="fallback-read" type="button" data-book="conscious-branding-marketing">পড়ুন</button></article>
+        <article class="fallback-book" style="--book-color:#274d33;--book-foil:#e5d9b0;--book-height:365px"><span>Volume V</span><strong>Marketing Framework</strong><button class="fallback-read" type="button" data-book="marketing-framework">পড়ুন</button></article>
+        <article class="fallback-book" style="--book-color:#16337a;--book-foil:#f5c518;--book-height:380px"><span>Volume VI</span><strong>How to Prepare for the AGI Era</strong><button class="fallback-read" type="button" data-book="agi">পড়ুন</button></article>
+        <article class="fallback-book" style="--book-color:#8fb4c9;--book-foil:#1e5aa8;--book-height:372px"><span>Volume VII</span><strong>Prompt Engineering Mastery</strong><button class="fallback-read" type="button" data-book="prompt-engineering-mastery">পড়ুন</button></article>
       </div>
       <div class="fallback__footer">
         <span>The shelf is an original interactive study; the cover artworks are the books' own covers.</span>
@@ -1748,10 +1969,13 @@
     import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
     import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
     import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
+    import * as pdfjsLib from "./vendor/pdf.min.mjs";
 
     const BOOKS = [
       {
         id: "smart-marketing",
+        pdf: "books/smart-marketing.pdf",
+        pages: 90,
         title: "Smart Marketing",
         roman: "I",
         discipline: "Marketing strategy",
@@ -1786,6 +2010,8 @@
       },
       {
         id: "the-48-laws-of-power",
+        pdf: "books/the-48-laws-of-power.pdf",
+        pages: 115,
         title: "THE 48 LAWS OF POWER",
         roman: "II",
         discipline: "Power & strategy",
@@ -1819,6 +2045,8 @@
       },
       {
         id: "wow-content",
+        pdf: "books/wow-content.pdf",
+        pages: 38,
         title: "WOW Content",
         roman: "III",
         discipline: "Content that sells",
@@ -1853,6 +2081,8 @@
       },
       {
         id: "conscious-branding-marketing",
+        pdf: "books/conscious-branding-marketing.pdf",
+        pages: 30,
         title: "Conscious Branding & Marketing",
         roman: "IV",
         discipline: "Conscious branding",
@@ -1886,6 +2116,8 @@
       },
       {
         id: "marketing-framework",
+        pdf: "books/marketing-framework.pdf",
+        pages: 80,
         title: "Marketing Framework",
         roman: "V",
         discipline: "Brand systems",
@@ -1920,6 +2152,8 @@
       },
       {
         id: "agi",
+        pdf: "books/agi.pdf",
+        pages: 13,
         title: "How to Prepare for the AGI Era",
         roman: "VI",
         discipline: "Future of marketing",
@@ -1954,6 +2188,8 @@
       },
       {
         id: "prompt-engineering-mastery",
+        pdf: "books/prompt-engineering-mastery.pdf",
+        pages: 35,
         title: "Prompt Engineering Mastery",
         roman: "VII",
         discipline: "Prompt engineering",
@@ -5940,6 +6176,208 @@
         applyWoodTexture();
       });
     }
+
+    /* ---- Real-book reader: the book's own PDF, page by page (PDF.js, vendored) ---- */
+    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+      "./vendor/pdf.worker.min.mjs",
+      import.meta.url
+    ).toString();
+
+    const reader = document.querySelector("#reader");
+    const readerEyebrow = document.querySelector("#reader-eyebrow");
+    const readerTitle = document.querySelector("#reader-title");
+    const readerStatus = document.querySelector("#reader-status");
+    const readerStage = document.querySelector("#reader-stage");
+    const readerCanvas = document.querySelector("#reader-canvas");
+    const readerCounter = document.querySelector("#reader-counter");
+    const readerPrev = document.querySelector("#reader-prev");
+    const readerNext = document.querySelector("#reader-next");
+    const readerClose = document.querySelector("#reader-close");
+    const readButton = document.querySelector("#read-book");
+
+    const BN_DIGITS = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+    const toBn = (value) => String(value).replace(/\d/g, (digit) => BN_DIGITS[Number(digit)]);
+
+    let readerOpen = false;
+    let readerBook = null;
+    let readerDoc = null;
+    let readerPage = 1;
+    let readerRendering = false;
+    let readerQueued = 0;
+    let readerReturnFocus = null;
+    const readerDocs = new Map();
+
+    function readerTotal() {
+      return readerDoc ? readerDoc.numPages : (readerBook ? readerBook.pages : 0);
+    }
+
+    function updateReaderControls() {
+      const total = readerTotal();
+      readerCounter.textContent = total
+        ? `পাতা ${toBn(readerPage)} / মোট ${toBn(total)}`
+        : "পাতা লোড হচ্ছে…";
+      readerPrev.disabled = !readerDoc || readerPage <= 1;
+      readerNext.disabled = !readerDoc || (total ? readerPage >= total : true);
+    }
+
+    async function renderReaderPage(num) {
+      if (!readerDoc) return;
+      if (readerRendering) {
+        readerQueued = num;
+        return;
+      }
+      readerRendering = true;
+      readerStatus.hidden = false;
+      readerStatus.textContent = "পাতা লোড হচ্ছে…";
+      try {
+        const page = await readerDoc.getPage(num);
+        const viewport = page.getViewport({ scale: 1 });
+        const maxWidth = Math.min(readerStage.clientWidth - 24, 880);
+        const maxHeight = Math.floor(window.innerHeight * 0.66);
+        const scale = Math.min(maxWidth / viewport.width, maxHeight / viewport.height);
+        const scaled = page.getViewport({ scale });
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        readerCanvas.width = Math.max(1, Math.floor(scaled.width * dpr));
+        readerCanvas.height = Math.max(1, Math.floor(scaled.height * dpr));
+        readerCanvas.style.width = `${scaled.width}px`;
+        readerCanvas.style.height = `${scaled.height}px`;
+        const ctx = readerCanvas.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        await page.render({ canvasContext: ctx, viewport: scaled }).promise;
+        readerPage = num;
+        readerCanvas.hidden = false;
+        readerStatus.hidden = true;
+        updateReaderControls();
+      } catch (error) {
+        readerStatus.textContent = "এই পাতাটি খোলা যায়নি। আবার চেষ্টা করুন।";
+      } finally {
+        readerRendering = false;
+        if (readerQueued && readerQueued !== readerPage) {
+          const next = readerQueued;
+          readerQueued = 0;
+          renderReaderPage(next);
+        }
+      }
+    }
+
+    function changeReaderPage(delta) {
+      if (!readerOpen || !readerDoc) return;
+      const total = readerTotal();
+      const target = Math.min(Math.max(readerPage + delta, 1), total);
+      if (target === readerPage && !readerRendering) return;
+      renderReaderPage(target);
+    }
+
+    async function openReader(book) {
+      if (!book || !book.pdf) return;
+      readerBook = book;
+      readerPage = 1;
+      readerQueued = 0;
+      readerDoc = readerDocs.get(book.id) || null;
+      readerEyebrow.textContent = `Volume ${book.roman} · ${book.discipline}`;
+      readerTitle.textContent = book.title;
+      readerReturnFocus = document.activeElement;
+      reader.hidden = false;
+      reader.setAttribute("aria-hidden", "false");
+      readerOpen = true;
+      detailPanel.inert = true;
+      readerCanvas.hidden = true;
+      updateReaderControls();
+      readerStatus.hidden = false;
+      readerStatus.textContent = readerDoc ? "পাতা লোড হচ্ছে…" : "বইটি খুলছি…";
+      readerClose.focus();
+      try {
+        if (!readerDoc) {
+          const loadingTask = pdfjsLib.getDocument({ url: book.pdf });
+          readerDoc = await loadingTask.promise;
+          readerDocs.set(book.id, readerDoc);
+        }
+        if (readerOpen && readerBook === book) {
+          await renderReaderPage(1);
+        }
+      } catch (error) {
+        if (readerOpen && readerBook === book) {
+          readerStatus.textContent = "দুঃখিত, বইটি খোলা যায়নি। আবার চেষ্টা করুন।";
+        }
+      }
+    }
+
+    function closeReader() {
+      if (!readerOpen) return;
+      readerOpen = false;
+      reader.hidden = true;
+      reader.setAttribute("aria-hidden", "true");
+      detailPanel.inert = mode !== "detail";
+      if (readerReturnFocus && document.contains(readerReturnFocus)) {
+        readerReturnFocus.focus();
+      }
+      readerReturnFocus = null;
+    }
+
+    function onReaderKeyDown(event) {
+      if (!readerOpen) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        closeReader();
+        return;
+      }
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        changeReaderPage(-1);
+        return;
+      }
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        changeReaderPage(1);
+        return;
+      }
+      if (event.key === "Tab") {
+        const focusables = [readerClose, readerPrev, readerNext].filter((element) => !element.disabled);
+        if (!focusables.length) return;
+        const current = focusables.indexOf(document.activeElement);
+        const next = event.shiftKey
+          ? (current <= 0 ? focusables.length - 1 : current - 1)
+          : (current >= focusables.length - 1 ? 0 : current + 1);
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        focusables[next].focus();
+      }
+    }
+
+    let readerTouchX = 0;
+    readerStage.addEventListener("touchstart", (event) => {
+      readerTouchX = event.changedTouches[0].clientX;
+    }, { passive: true });
+    readerStage.addEventListener("touchend", (event) => {
+      const deltaX = event.changedTouches[0].clientX - readerTouchX;
+      if (Math.abs(deltaX) > 60) changeReaderPage(deltaX < 0 ? 1 : -1);
+    }, { passive: true });
+
+    let readerResizeTimer = 0;
+    window.addEventListener("resize", () => {
+      if (!readerOpen || !readerDoc) return;
+      window.clearTimeout(readerResizeTimer);
+      readerResizeTimer = window.setTimeout(() => {
+        if (readerOpen && readerDoc) renderReaderPage(readerPage);
+      }, 180);
+    });
+
+    window.addEventListener("keydown", onReaderKeyDown);
+    readerClose.addEventListener("click", closeReader);
+    readerPrev.addEventListener("click", () => changeReaderPage(-1));
+    readerNext.addEventListener("click", () => changeReaderPage(1));
+    readButton.addEventListener("click", () => {
+      if (activeBook) openReader(activeBook.data);
+    });
+    staticFallback.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-book]");
+      if (!button) return;
+      const book = BOOKS.find((item) => item.id === button.dataset.book);
+      if (book) openReader(book);
+    });
 
     initialize().catch(() => {
       showFallback("The interactive shelf could not be prepared. The complete static catalog remains available.");
